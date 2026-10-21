@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pancasila & Civics Racing Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: radial-gradient(circle at center, #1a1c29 0%, #0d0e15 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        .track-bg {
+            background: linear-gradient(90deg, #222 0%, #333 50%, #222 100%);
+            border-top: 4px dashed #ffcc00;
+            border-bottom: 4px dashed #ffcc00;
+            position: relative;
+            overflow: hidden;
+        }
+        .track-stripes {
+            background: repeating-linear-gradient(
+                90deg, transparent, transparent 20px,
+                rgba(255, 255, 255, 0.1) 20px, rgba(255, 255, 255, 0.1) 40px
+            );
+            animation: moveStripes 3s linear infinite;
+        }
+        @keyframes moveStripes {
+            0% { background-position: 0 0; }
+            100% { background-position: -40px 0; }
+        }
+
+        .car-transition { transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        @keyframes carVroom {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%      { transform: translateX(-50%) translateY(-6px); }
+        }
+        .car-vroom { animation: carVroom 0.35s ease-in-out 2; }
+
+        .glow-red   { box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); }
+        .glow-gold  { box-shadow: 0 0 20px rgba(234, 179, 8, 0.8); }
+
+        #timerBar { transition: width 1s linear, background 300ms ease; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+        #confetti {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 999;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .feedback-anim { animation: slideDown 250ms ease-out; }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            header, footer, button, .no-print { display: none !important; }
+            main { background: #fff !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+            section#reportScreen { display: block !important; }
+            section:not(#reportScreen) { display: none !important; }
+            #reportScreen * {
+                color: #000 !important;
+                background: #fff !important;
+                border-color: #ccc !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-2 md:p-6 flex flex-col justify-between items-center">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-5xl mb-4 flex justify-between items-center bg-gray-900/80 p-4 rounded-xl border border-gray-800 shadow-2xl backdrop-blur-md no-print">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-flag-checkered text-red-500 text-3xl animate-bounce"></i>
+            <div>
+                <h1 class="font-orbitron text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-amber-400 to-yellow-300">
+                    SPEED CIVICS RACER
+                </h1>
+                <p class="text-xs text-gray-400">Grade 8 & 9 Pancasila & Citizenship Challenge</p>
+            </div>
+        </div>
+        <div id="userInfoHeader" class="hidden text-right">
+            <span id="headerStudentName" class="font-bold text-yellow-400 text-lg block"></span>
+            <span id="headerStudentClass" class="text-xs text-gray-400"></span>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-5xl bg-gray-900/90 border border-gray-800 rounded-2xl p-4 md:p-8 shadow-2xl backdrop-blur-lg relative overflow-hidden">
+        
+        <!-- 1. LOGIN SCREEN -->
+        <section id="loginScreen" class="flex flex-col items-center justify-center py-8">
+            <div class="w-full max-w-md bg-gray-800/80 p-6 md:p-8 rounded-xl border border-gray-700 shadow-xl text-center">
+                <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 glow-gold">
+                    <i class="fa-solid fa-car-side text-4xl text-white"></i>
+                </div>
+                <h2 class="font-orbitron text-2xl font-bold text-white mb-2">DRIVER REGISTRATION</h2>
+                <p class="text-gray-400 text-sm mb-6">Enter your details to start the high-speed civics race!</p>
+                
+                <form id="loginForm" onsubmit="startQuiz(event)" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">STUDENT NAME</label>
+                        <input type="text" id="studentName" required placeholder="e.g. Alex Pratama" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-red-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">CLASS / GRADE</label>
+                        <input type="text" id="studentClass" required placeholder="e.g. 8A / 9B" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-red-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">TIMER PER QUESTION</label>
+                        <div class="flex items-center space-x-2 bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-yellow-400 font-orbitron font-bold">
+                            <i class="fa-solid fa-stopwatch text-red-500"></i>
+                            <span>50 Seconds / Question</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full mt-4 bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-orbitron font-bold py-3 rounded-lg shadow-lg hover:shadow-red-500/50 transition duration-300 flex items-center justify-center space-x-2">
+                        <span>START ENGINE & RACE</span>
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </button>
+                </form>
+
+                <div class="mt-5 pt-4 border-t border-gray-700">
+                    <button type="button" onclick="showHistory('login')" class="text-xs text-gray-400 hover:text-yellow-400 transition font-semibold">
+                        <i class="fa-solid fa-chart-line"></i> View Race History / Report
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. QUIZ DASHBOARD -->
+        <section id="quizScreen" class="hidden space-y-6">
+            
+            <!-- Live Status & Timer Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gray-800/90 border border-gray-700 p-3 rounded-xl flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-500/20 text-green-400 rounded-lg flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-trophy text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-400 block">SCORE</span>
+                        <span id="liveScore" class="font-orbitron text-xl font-bold text-green-400">0</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800/90 border border-gray-700 p-3 rounded-xl flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-list-check text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-400 block">QUESTION</span>
+                        <span id="questionNum" class="font-orbitron text-xl font-bold text-blue-400">1 / 40</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800/90 border border-gray-700 p-3 rounded-xl flex items-center space-x-3 col-span-2 md:col-span-2">
+                    <div id="timerBox" class="w-10 h-10 bg-red-500/20 text-red-400 rounded-lg flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-stopwatch text-xl"></i>
+                    </div>
+                    <div class="w-full">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-gray-400">TIME REMAINING</span>
+                            <span id="timerText" class="font-orbitron text-lg font-bold text-red-400">50s</span>
+                        </div>
+                        <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                            <div id="timerBar" class="h-full w-full rounded-full" style="background: linear-gradient(to right, #16a34a, #22c55e);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Race Track -->
+            <div class="track-bg rounded-xl p-4 my-4 border border-gray-700 shadow-inner">
+                <div class="track-stripes absolute inset-0 opacity-20"></div>
+                
+                <div class="flex justify-between items-center text-xs text-gray-400 mb-2 font-orbitron">
+                    <span>START</span>
+                    <span class="text-yellow-400">RACE TRACK PROGRESS</span>
+                    <span>FINISH LINE 🏁</span>
+                </div>
+
+                <div class="relative h-12 flex items-center">
+                    <div class="w-full h-1 bg-gray-600 rounded"></div>
+                    
+                    <div id="racingCar" class="absolute left-0 car-transition -translate-x-1/2 flex flex-col items-center">
+                        <span id="carLabel" class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-orbitron mb-1 whitespace-nowrap shadow">YOU</span>
+                        <i class="fa-solid fa-car-side text-2xl text-red-500 glow-red transform scale-x-[-1]"></i>
+                    </div>
+
+                    <div class="absolute right-0 text-2xl text-yellow-400">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-gray-800/60 border border-gray-700/80 p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <span id="chapterBadge" class="bg-gray-700 text-yellow-300 text-xs px-3 py-1 rounded-full font-semibold border border-yellow-500/30">
+                        Grade 8 – Chapter 1
+                    </span>
+                </div>
+                <h3 id="questionText" class="text-lg md:text-xl font-semibold text-white mb-6 leading-relaxed">
+                    Question loading...
+                </h3>
+
+                <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+                <!-- Feedback box -->
+                <div id="feedbackBox" class="hidden mt-4 p-4 rounded-xl border-2 flex items-start space-x-3 text-sm"></div>
+            </div>
+
+            <!-- Footer Controls -->
+            <div class="flex justify-between items-center pt-2">
+                <div class="text-xs text-gray-400 hidden md:block">
+                    Select the correct option before the time expires! Press <kbd class="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-600 text-[10px]">Enter</kbd> to continue.
+                </div>
+                <button id="nextBtn" onclick="nextQuestion()" disabled class="bg-gray-700 text-gray-400 cursor-not-allowed font-orbitron px-6 py-2.5 rounded-lg font-bold flex items-center space-x-2 transition">
+                    <span>NEXT</span>
+                    <i class="fa-solid fa-forward"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. REPORT / RESULTS SCREEN -->
+        <section id="reportScreen" class="hidden space-y-6">
+            <div class="text-center py-4">
+                <div class="inline-block p-4 bg-yellow-500/10 rounded-full border border-yellow-500/30 mb-3 glow-gold">
+                    <i class="fa-solid fa-trophy text-5xl text-yellow-400"></i>
+                </div>
+                <h2 class="font-orbitron text-3xl font-black text-white">RACE FINISHED!</h2>
+                <p class="text-gray-400 text-sm">Official Civics Performance Report</p>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div class="border-b md:border-b-0 md:border-r border-gray-700 pb-3 md:pb-0">
+                    <span class="text-xs text-gray-400 block">DRIVER NAME</span>
+                    <span id="reportName" class="font-orbitron text-lg font-bold text-yellow-400">--</span>
+                </div>
+                <div class="border-b md:border-b-0 md:border-r border-gray-700 pb-3 md:pb-0">
+                    <span class="text-xs text-gray-400 block">CLASS</span>
+                    <span id="reportClass" class="font-orbitron text-lg font-bold text-white">--</span>
+                </div>
+                <div>
+                    <span class="text-xs text-gray-400 block">FINAL GRADE</span>
+                    <span id="reportGrade" class="font-orbitron text-2xl font-black text-green-400">0%</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gray-800/80 p-4 rounded-xl border border-gray-700 text-center">
+                    <i class="fa-solid fa-circle-check text-green-400 text-2xl mb-1"></i>
+                    <span class="text-xs text-gray-400 block">CORRECT</span>
+                    <span id="reportCorrect" class="font-orbitron text-xl font-bold text-white">0</span>
+                </div>
+                <div class="bg-gray-800/80 p-4 rounded-xl border border-gray-700 text-center">
+                    <i class="fa-solid fa-circle-xmark text-red-400 text-2xl mb-1"></i>
+                    <span class="text-xs text-gray-400 block">WRONG</span>
+                    <span id="reportWrong" class="font-orbitron text-xl font-bold text-white">0</span>
+                </div>
+                <div class="bg-gray-800/80 p-4 rounded-xl border border-gray-700 text-center">
+                    <i class="fa-solid fa-clock-rotate-left text-amber-400 text-2xl mb-1"></i>
+                    <span class="text-xs text-gray-400 block">TIMED OUT</span>
+                    <span id="reportTimeout" class="font-orbitron text-xl font-bold text-white">0</span>
+                </div>
+                <div class="bg-gray-800/80 p-4 rounded-xl border border-gray-700 text-center">
+                    <i class="fa-solid fa-gauge-high text-blue-400 text-2xl mb-1"></i>
+                    <span class="text-xs text-gray-400 block">TOTAL SCORE</span>
+                    <span id="reportTotalScore" class="font-orbitron text-xl font-bold text-yellow-400">0 pts</span>
+                </div>
+            </div>
+
+            <div class="bg-gray-800/80 rounded-xl border border-gray-700 overflow-hidden">
+                <div class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="font-orbitron text-sm font-bold text-gray-200">DETAILED QUESTION REVIEW</h3>
+                    <span class="text-xs text-gray-400">40 Questions Total</span>
+                </div>
+                <div class="max-h-96 overflow-y-auto p-4 space-y-3" id="breakdownContainer"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
+                <button onclick="restartQuiz()" class="bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-orbitron font-bold py-3 rounded-lg shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>RETRY RACE</span>
+                </button>
+                <button onclick="showHistory('report')" class="bg-blue-600 hover:bg-blue-500 text-white font-orbitron font-bold py-3 rounded-lg shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>VIEW HISTORY</span>
+                </button>
+                <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-orbitron font-bold py-3 rounded-lg shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span>EXPORT CSV</span>
+                </button>
+                <button onclick="window.print()" class="bg-gray-700 hover:bg-gray-600 text-white font-orbitron font-bold py-3 rounded-lg shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span>PRINT REPORT</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. HISTORY / REPORT SCREEN -->
+        <section id="historyScreen" class="hidden space-y-4">
+            <div class="flex justify-between items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="font-orbitron text-2xl font-black text-white">📊 RACE HISTORY</h2>
+                    <p class="text-xs text-gray-400">All attempts saved on this device</p>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-orbitron font-bold px-4 py-2 rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-file-csv"></i><span>EXPORT CSV</span>
+                    </button>
+                    <button onclick="backFromHistory()" class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-orbitron font-bold px-4 py-2 rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-arrow-left"></i><span>BACK</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="historySummary" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+
+            <input type="text" id="historySearch" oninput="renderHistory()" placeholder="Search by student name…" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition">
+
+            <div id="historyBody"></div>
+        </section>
+
+    </main>
+
+    <footer class="mt-6 text-center text-xs text-gray-500 no-print">
+        Pancasila & Citizenship Interactive Quiz App &bull; Powered by Racing Engine
+    </footer>
+
+    <canvas id="confetti"></canvas>
+
+    <script>
+        /* ============================================================
+           QUESTION BANK (40 questions)
+           ============================================================ */
+        const quizData = [
+            /* Grade 8 Chapter 1 */
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "During a class discussion, a student suggests that the majority should always win and the minority must simply follow without being heard. Which principle of Pancasila is most directly challenged?",
+              options: ["The belief in one God","A just and civilized humanity","The sovereignty of the people through deliberation","Social justice for all Indonesian people"], answer: 2 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "A community decides to build a small prayer room for a minority religious group. Some residents refuse, arguing that only the majority’s religion should be facilitated. Which two Pancasila principles are in tension?",
+              options: ["Sila 1 and Sila 3","Sila 2 and Sila 5","Sila 4 and Sila 5","Sila 1 and Sila 4"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "A student helps a classmate who is struggling with lessons without expecting anything in return, even though they come from different backgrounds. This behavior best reflects…",
+              options: ["Sila 1","Sila 2","Sila 3","Sila 5"], answer: 1 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "In a school election, one candidate promises special privileges to students who vote for them. This promise contradicts the Pancasila value of…",
+              options: ["Deliberation and representation","Social justice for all Indonesians","Unity in diversity","Belief in the Almighty God"], answer: 1 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "A neighborhood experiences conflict between two families. The community leader invites both families to talk and find a fair solution together. This action embodies…",
+              options: ["Sila 4 – deliberation to reach consensus","Sila 3 – prioritizing unity over personal ego","Sila 5 – fairness in resolving disputes","Sila 1 – religious tolerance"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "A student refuses to participate in a group project because the other members have different ethnic backgrounds. This attitude violates…",
+              options: ["Sila 1","Sila 3","Sila 4","Sila 5"], answer: 1 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "A local government cuts funding for a school in a remote area and redirects the money to a more developed city school. This decision is least aligned with…",
+              options: ["Social justice","Civilized humanity","Belief in God","Unity in diversity"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "After a natural disaster, volunteers from various religious and ethnic groups work together to help victims. This shows that Pancasila can function as…",
+              options: ["A tool to enforce one dominant culture","A uniting ideology in times of crisis","A reason to prioritize one group’s safety","A rule that only applies to government officials"], answer: 1 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "A student uses social media to spread negative rumors about a classmate from a different religion. This action violates…",
+              options: ["Sila 1 and Sila 2","Sila 2 and Sila 3","Sila 3 and Sila 5","Sila 4 and Sila 5"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 1: Pancasila in My Nation’s Life",
+              question: "A village meeting decides on the use of community funds. Everyone is given a chance to speak, and the final decision is made by mutual agreement. This is a practical example of…",
+              options: ["Sila 4","Sila 2","Sila 1","Sila 5"], answer: 0 },
+
+            /* Grade 8 Chapter 2 */
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "A student argues that the 1945 Constitution is outdated and should be completely replaced because it was made before the digital era. The best response is…",
+              options: ["The Constitution can be amended to adapt to changing times without losing its core values.","The Constitution must never be changed because it is sacred.","The Constitution is only relevant for government officials.","The Constitution should be ignored because laws are more important."], answer: 0 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "A student council is given authority to create rules for a new recycling program. This is an example of implementing the Constitution’s principle of…",
+              options: ["Delegating power to the people at the smallest level","Centralizing all decisions in the hands of the principal","Ignoring regulations from the government","Giving unlimited power to student leaders"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "A citizen refuses to pay taxes because they believe the government is not using the money well. From the perspective of the 1945 Constitution, this attitude is…",
+              options: ["Correct, because citizens have the right to protest.","Incorrect, because paying taxes is a constitutional obligation.","Acceptable, because tax rules are not part of the Constitution.","Correct, because citizens may choose which laws to obey."], answer: 1 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "A local community organizes a peaceful demonstration to demand better public transportation. This action is constitutionally protected because…",
+              options: ["The 1945 Constitution guarantees freedom of assembly and expression.","The Constitution only allows demonstrations on national holidays.","Only registered organizations may hold demonstrations.","Demonstrations are allowed only if approved by the majority."], answer: 0 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "A school principal bans all student organizations without consulting students or teachers. This decision contradicts the constitutional spirit of…",
+              options: ["Deliberation and representation","Absolute obedience to authority","Centralized decision-making","Eliminating all forms of participation"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "When a new law is proposed, the government must ensure that it does not conflict with the 1945 Constitution. This shows that the Constitution functions as…",
+              options: ["The highest legal framework in the country","A suggestion that can be ignored if inconvenient","A document only relevant for historical study","A rule that applies only to the president"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "The 1945 Constitution was formulated through meetings involving representatives from various regions. This historical fact teaches the value of…",
+              options: ["Inclusive and participatory decision-making","Relying solely on one leader’s wisdom","Avoiding discussions to save time","Giving power only to certain groups"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "A citizen uses free speech to spread hateful remarks against a religious group. The government takes legal action. This is an example of…",
+              options: ["Limiting freedom of speech arbitrarily","Enforcing constitutional limits to protect public order and rights","Violating the citizen’s absolute right to express anything","Punishing citizens for criticizing the government"], answer: 1 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "Residents work together to draft a local agreement on waste management, referring to national laws and the Constitution as their guide. This reflects the principle that…",
+              options: ["Local rules must align with higher legal norms","Local communities can create any rule regardless of national law","The Constitution is irrelevant to daily community life","Local rules may replace national laws"], answer: 0 },
+            { chapter: "Grade 8 – Chapter 2: My Nation’s Guideline (1945 Constitution)",
+              question: "A student leader organizes a forum where students voice concerns about school policies. The principal listens and considers their input before deciding. This illustrates…",
+              options: ["Democratic deliberation in a school setting","The rejection of all forms of authority","A violation of school hierarchy","The absence of leadership"], answer: 0 },
+
+            /* Grade 9 Chapter 1 */
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A local government prioritizes infrastructure in the capital city while ignoring remote villages. This policy contradicts…",
+              options: ["Social justice for all Indonesian people","The belief in one supreme God","The unity of Indonesia","Freedom of expression"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A student from a minority ethnic group is mocked for their accent. The school holds a cultural awareness workshop. This initiative reflects…",
+              options: ["Bhinneka Tunggal Ika and Sila 3","Sila 1 and Sila 4","Sila 2 and Sila 5","Sila 4 and Sila 5"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A group refuses to accept democratic election results and incites violence. This threatens the Pancasila value of…",
+              options: ["Deliberation and representation","Belief in God","A just and civilized humanity","Social justice"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "“Bhinneka Tunggal Ika” means “Unity in Diversity.” A practical example in school is…",
+              options: ["Forcing all students to adopt the same cultural practices","Encouraging students to learn about and respect each other’s traditions","Separating students based on ethnic backgrounds","Ignoring cultural differences completely"], answer: 1 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A company hires only employees from one ethnic group, claiming it preserves “cultural fit.” This violates…",
+              options: ["Sila 3 and Bhinneka Tunggal Ika","Sila 1 and Sila 4","Sila 2 and Sila 5","Sila 4 and Sila 5"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A region proposes to separate itself from Indonesia. The national government firmly rejects the idea. This rejection is based on…",
+              options: ["The Unitary State of the Republic of Indonesia","The unlimited right to self-determination","The superiority of certain regions","The principle of majority rule"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A community holds a traditional ceremony attended by people of different religions. Everyone can participate comfortably without being forced to follow specific religious rituals. This demonstrates harmony between…",
+              options: ["Sila 1 and Sila 3","Sila 2 and Sila 4","Sila 4 and Sila 5","Sila 3 and Sila 5"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A student criticizes a government policy on social media in a harsh and insulting manner. According to Pancasila and the Constitution, this action is…",
+              options: ["Fully protected because freedom of speech is absolute.","Problematic because freedom of expression must be exercised responsibly and ethically.","Praiseworthy because any criticism of the government is always justified.","Not allowed because citizens may never criticize the government."], answer: 1 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A local festival showcases dances, foods, and crafts from various ethnic groups in the same city. This event strengthens…",
+              options: ["National unity through cultural appreciation","The dominance of one culture over others","Separation between cultural groups","The idea that only one culture should be recognized"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 1: Pancasila, Constitution, Bhinneka Tunggal Ika & NKRI",
+              question: "A village head makes decisions without consulting villagers, claiming the leader knows best. This leadership style contradicts…",
+              options: ["Sila 4 – deliberation and representation","Sila 1 – religious values","Sila 2 – civilized humanity","Sila 5 – social justice"], answer: 0 },
+
+            /* Grade 9 Chapter 2 */
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "A student regularly skips school and ignores homework but demands the right to receive a good grade. This illustrates…",
+              options: ["The importance of fulfilling obligations before claiming rights","The absolute nature of student rights","The irrelevance of school rules","The idea that rights have no limits"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "A citizen uses free speech to spread false information that causes public panic. The government takes legal action. This is an example of…",
+              options: ["A violation of the citizen’s absolute rights","A legitimate restriction to protect public order and the rights of others","An unnecessary interference in personal matters","A denial of all freedom of expression"], answer: 1 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "A student witnesses a classmate being bullied online. The most appropriate action reflecting rights and obligations is to…",
+              options: ["Report the bullying to a teacher or trusted adult and support the victim","Join in the bullying to avoid becoming a target","Ignore it because it is not their problem","Share the bullying content with more people"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "The 1945 Constitution guarantees the right to education. However, a student who receives free education refuses to study and disrupts the class. This shows…",
+              options: ["A failure to balance the right to education with the obligation to learn responsibly","That the right to education is optional","That the Constitution does not apply to students","That free education removes all student obligations"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "A company refuses to hire a qualified candidate solely because of gender. This violates…",
+              options: ["Equality before the law and non-discrimination","Absolute freedom of contract","The company’s right to choose anyone","The principle of majority rule"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "A citizen complains about poor public services on social media but provides no evidence and uses offensive language. A better way to exercise the right to expression is…",
+              options: ["Submit a formal complaint through the appropriate government channel with clear evidence","Continue posting offensive comments to gain attention","Stop complaining altogether because it is useless","Encourage others to spread unverified information"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "In a family discussion about holiday plans, parents listen to their children’s opinions but ultimately make the final decision. This reflects…",
+              options: ["A balance between respecting children’s right to express opinions and parental responsibility","A complete denial of children’s rights","An unnecessary delay in decision-making","The idea that children’s opinions are irrelevant"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "A student volunteers to help clean up the school environment without being asked. This demonstrates…",
+              options: ["The performance of a civic obligation for the common good","A desire for special rewards","A violation of personal freedom","An unnecessary action because cleanliness is the janitor’s duty only"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "The government provides financial assistance to low-income students so they can continue their education. This policy is an example of…",
+              options: ["Fulfilling citizens’ right to education","Ignoring the principle of self-reliance","Giving unfair advantages to certain groups","Reducing citizens’ obligations"], answer: 0 },
+            { chapter: "Grade 9 – Chapter 2: Rights and Obligations of Citizens",
+              question: "A citizen refuses to participate in a neighborhood security patrol because they believe it is solely the government’s responsibility. This attitude ignores the principle that…",
+              options: ["Maintaining security is a shared obligation between citizens and the state","Citizens have no role in public safety","Only the police are responsible for security","Rights are more important than obligations"], answer: 0 }
+        ];
+
+        const STORAGE_KEY = "pancasilaRacingResults_v1";
+        const TIME_PER_Q = 50;
+
+        /* ============================================================
+           STATE
+           ============================================================ */
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let timer = TIME_PER_Q;
+        let timerInterval = null;
+        let student = { name: "", class: "" };
+        let userAnswers = [];
+        let historyReturnTo = "login";
+
+        /* ============================================================
+           AUDIO
+           ============================================================ */
+        let audioCtx = null;
+        let muted = false;
+
+        function getAudio() {
+            if (!audioCtx) {
+                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+                catch (e) { return null; }
+            }
+            if (audioCtx.state === "suspended") audioCtx.resume();
+            return audioCtx;
+        }
+
+        function playTone(freq, duration, type = "sine", delay = 0, vol = 0.15) {
+            if (muted) return;
+            const ctx = getAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime + delay;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.linearRampToValueAtTime(vol, now + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration + 0.05);
+        }
+
+        const sfx = {
+            correct() { playTone(523, 0.10, "sine", 0, 0.16); playTone(659, 0.10, "sine", 0.08, 0.16); playTone(784, 0.22, "sine", 0.16, 0.18); },
+            wrong()   { playTone(220, 0.16, "sawtooth", 0, 0.12); playTone(165, 0.26, "sawtooth", 0.12, 0.12); },
+            timeout() { playTone(330, 0.18, "sawtooth", 0, 0.14); playTone(220, 0.32, "sawtooth", 0.16, 0.14); },
+            finish()  { playTone(523, 0.15, "sine", 0, 0.16); playTone(659, 0.15, "sine", 0.13, 0.16); playTone(784, 0.15, "sine", 0.26, 0.16); playTone(1047, 0.4, "sine", 0.39, 0.18); },
+            warn()    { playTone(880, 0.05, "square", 0, 0.06); },
+            click()   { playTone(600, 0.04, "sine", 0, 0.05); }
+        };
+
+        /* ============================================================
+           START QUIZ
+           ============================================================ */
+        function startQuiz(e) {
+            e.preventDefault();
+            getAudio();
+
+            student.name = document.getElementById('studentName').value.trim();
+            student.class = document.getElementById('studentClass').value.trim();
+            if (!student.name || !student.class) return;
+
+            document.getElementById('headerStudentName').textContent = student.name;
+            document.getElementById('headerStudentClass').textContent = "Class: " + student.class;
+            document.getElementById('userInfoHeader').classList.remove('hidden');
+
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            document.getElementById('reportScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.add('hidden');
+
+            currentQuestionIdx = 0;
+            score = 0;
+            userAnswers = [];
+
+            updateLiveScore();
+            updateCarPosition(false);
+            loadQuestion();
+        }
+
+        /* ============================================================
+           LOAD QUESTION
+           ============================================================ */
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            const q = quizData[currentQuestionIdx];
+
+            document.getElementById('chapterBadge').textContent = q.chapter;
+            document.getElementById('questionText').textContent = (currentQuestionIdx + 1) + ". " + q.question;
+            document.getElementById('questionNum').textContent = `${currentQuestionIdx + 1} / ${quizData.length}`;
+
+            const fb = document.getElementById('feedbackBox');
+            fb.classList.add('hidden');
+            fb.classList.remove('feedback-anim');
+
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.disabled = true;
+            nextBtn.className = "bg-gray-700 text-gray-400 cursor-not-allowed font-orbitron px-6 py-2.5 rounded-lg font-bold flex items-center space-x-2 transition";
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            const prefixes = ['A', 'B', 'C', 'D'];
+
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full text-left bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-yellow-500/50 p-4 rounded-xl transition duration-200 flex items-start space-x-3 group";
+                btn.onclick = () => selectOption(idx);
+                btn.innerHTML = `
+                    <span class="font-orbitron font-bold text-yellow-400 bg-gray-900 group-hover:bg-yellow-500 group-hover:text-black w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-gray-700 transition">
+                        ${prefixes[idx]}
+                    </span>
+                    <span class="text-sm md:text-base text-gray-200 pt-1 leading-snug">${optText}</span>
+                `;
+                container.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        /* ============================================================
+           TIMER
+           ============================================================ */
+        function startTimer() {
+            timer = TIME_PER_Q;
+
+            const bar = document.getElementById('timerBar');
+            bar.style.transition = 'none';
+            bar.style.width = '100%';
+            bar.style.background = 'linear-gradient(to right, #16a34a, #22c55e)';
+            void bar.offsetWidth;
+            bar.style.transition = 'width 1s linear, background 300ms ease';
+
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                timer--;
+                updateTimerUI();
+
+                if ([10, 5, 3, 2, 1].includes(timer)) sfx.warn();
+
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const bar = document.getElementById('timerBar');
+            document.getElementById('timerText').textContent = `${timer}s`;
+            bar.style.width = `${(timer / TIME_PER_Q) * 100}%`;
+
+            let bg;
+            if (timer <= 10) bg = 'linear-gradient(to right, #dc2626, #ef4444)';
+            else if (timer <= 20) bg = 'linear-gradient(to right, #d97706, #f59e0b)';
+            else bg = 'linear-gradient(to right, #16a34a, #22c55e)';
+            bar.style.background = bg;
+
+            const box = document.getElementById('timerBox');
+            if (timer <= 10) {
+                box.className = "w-10 h-10 bg-red-600 text-white rounded-lg flex items-center justify-center font-bold";
+            } else {
+                box.className = "w-10 h-10 bg-red-500/20 text-red-400 rounded-lg flex items-center justify-center font-bold";
+            }
+        }
+
+        /* ============================================================
+           ANSWER
+           ============================================================ */
+        function selectOption(selectedIndex) {
+            clearInterval(timerInterval);
+            const q = quizData[currentQuestionIdx];
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = (selectedIndex === q.answer);
+            const fb = document.getElementById('feedbackBox');
+
+            if (isCorrect) {
+                score += 100;
+                userAnswers.push({ status: 'correct', chosen: selectedIndex });
+                buttons[selectedIndex].className = "w-full text-left bg-green-900/60 border-2 border-green-500 p-4 rounded-xl flex items-start space-x-3 glow-green";
+
+                fb.className = "mt-4 p-4 rounded-xl border-2 flex items-start space-x-3 text-sm feedback-anim border-green-500 bg-green-900/40 text-green-300";
+                fb.innerHTML = `<i class="fa-solid fa-circle-check text-lg mt-0.5"></i><div><strong>Correct!</strong> +100 points. Your car moves forward! 🚗💨</div>`;
+                fb.classList.remove('hidden');
+
+                sfx.correct();
+                updateLiveScore();
+                updateCarPosition(true);
+            } else {
+                userAnswers.push({ status: 'wrong', chosen: selectedIndex });
+                buttons[selectedIndex].className = "w-full text-left bg-red-900/60 border-2 border-red-500 p-4 rounded-xl flex items-start space-x-3 glow-red";
+                buttons[q.answer].className = "w-full text-left bg-green-900/40 border-2 border-green-500/80 p-4 rounded-xl flex items-start space-x-3";
+
+                const prefixes = ['A', 'B', 'C', 'D'];
+                fb.className = "mt-4 p-4 rounded-xl border-2 flex items-start space-x-3 text-sm feedback-anim border-red-500 bg-red-900/40 text-red-300";
+                fb.innerHTML = `<i class="fa-solid fa-circle-xmark text-lg mt-0.5"></i><div><strong>Not quite.</strong> The correct answer is <strong>${prefixes[q.answer]}. ${q.options[q.answer]}</strong>. Your car stays still.</div>`;
+                fb.classList.remove('hidden');
+
+                sfx.wrong();
+            }
+
+            enableNextButton();
+        }
+
+        function handleTimeout() {
+            const q = quizData[currentQuestionIdx];
+            userAnswers.push({ status: 'timeout', chosen: null });
+
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            buttons[q.answer].className = "w-full text-left bg-amber-900/40 border-2 border-amber-500 p-4 rounded-xl flex items-start space-x-3";
+
+            const fb = document.getElementById('feedbackBox');
+            const prefixes = ['A', 'B', 'C', 'D'];
+            fb.className = "mt-4 p-4 rounded-xl border-2 flex items-start space-x-3 text-sm feedback-anim border-amber-500 bg-amber-900/40 text-amber-300";
+            fb.innerHTML = `<i class="fa-solid fa-clock text-lg mt-0.5"></i><div><strong>Time's up!</strong> The correct answer is <strong>${prefixes[q.answer]}. ${q.options[q.answer]}</strong>.</div>`;
+            fb.classList.remove('hidden');
+
+            sfx.timeout();
+            enableNextButton();
+        }
+
+        function enableNextButton() {
+            const btn = document.getElementById('nextBtn');
+            btn.disabled = false;
+            btn.className = "bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-orbitron px-6 py-2.5 rounded-lg font-bold flex items-center space-x-2 transition shadow-lg hover:shadow-red-500/40 cursor-pointer";
+        }
+
+        function updateLiveScore() {
+            document.getElementById('liveScore').textContent = score;
+        }
+
+        /* ============================================================
+           CAR POSITION — moves on correct answers only
+           ============================================================ */
+        function updateCarPosition(animate) {
+            const correctCount = userAnswers.filter(a => a.status === 'correct').length;
+            const pct = (correctCount / quizData.length) * 90;
+            const car = document.getElementById('racingCar');
+            car.style.left = `${pct}%`;
+
+            if (animate) {
+                car.classList.remove('car-vroom');
+                void car.offsetWidth;
+                car.classList.add('car-vroom');
+                setTimeout(() => car.classList.remove('car-vroom'), 800);
+            }
+        }
+
+        /* ============================================================
+           NEXT
+           ============================================================ */
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < quizData.length) {
+                loadQuestion();
+            } else {
+                showReport();
+            }
+        }
+
+        /* ============================================================
+           REPORT
+           ============================================================ */
+        function showReport() {
+            clearInterval(timerInterval);
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.remove('hidden');
+
+            const total = quizData.length;
+            let correctCount = 0, wrongCount = 0, timeoutCount = 0;
+            userAnswers.forEach(a => {
+                if (a.status === 'correct') correctCount++;
+                else if (a.status === 'wrong') wrongCount++;
+                else timeoutCount++;
+            });
+
+            const percentage = Math.round((correctCount / total) * 100);
+
+            document.getElementById('reportName').textContent = student.name;
+            document.getElementById('reportClass').textContent = student.class;
+            document.getElementById('reportGrade').textContent = `${percentage}%`;
+            document.getElementById('reportCorrect').textContent = correctCount;
+            document.getElementById('reportWrong').textContent = wrongCount;
+            document.getElementById('reportTimeout').textContent = timeoutCount;
+            document.getElementById('reportTotalScore').textContent = `${score} pts`;
+
+            saveResult({
+                name: student.name,
+                class: student.class,
+                score,
+                correct: correctCount,
+                wrong: wrongCount,
+                timeout: timeoutCount,
+                total,
+                accuracy: percentage,
+                date: new Date().toISOString()
+            });
+
+            const container = document.getElementById('breakdownContainer');
+            container.innerHTML = '';
+            const prefixes = ['A', 'B', 'C', 'D'];
+
+            quizData.forEach((q, idx) => {
+                const ua = userAnswers[idx];
+                let badge;
+                if (ua.status === 'correct') badge = `<span class="bg-green-500/20 text-green-400 text-xs px-2.5 py-1 rounded border border-green-500/30 font-bold whitespace-nowrap"><i class="fa-solid fa-check"></i> CORRECT</span>`;
+                else if (ua.status === 'wrong') badge = `<span class="bg-red-500/20 text-red-400 text-xs px-2.5 py-1 rounded border border-red-500/30 font-bold whitespace-nowrap"><i class="fa-solid fa-xmark"></i> WRONG</span>`;
+                else badge = `<span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded border border-amber-500/30 font-bold whitespace-nowrap"><i class="fa-solid fa-clock"></i> TIMED OUT</span>`;
+
+                const correctText = `${prefixes[q.answer]}. ${q.options[q.answer]}`;
+                const chosenText = ua.chosen !== null ? `${prefixes[ua.chosen]}. ${q.options[ua.chosen]}` : 'None (Time Out)';
+
+                const item = document.createElement('div');
+                item.className = "bg-gray-900/90 p-3 rounded-lg border border-gray-700 text-xs space-y-1";
+                item.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <span class="font-bold text-gray-300">Q${idx + 1}: ${q.question}</span>
+                        ${badge}
+                    </div>
+                    <div class="text-gray-400 mt-1">
+                        <span class="text-green-400 font-semibold">Correct:</span> ${correctText}
+                    </div>
+                    ${ua.status !== 'correct' ? `<div class="text-gray-400"><span class="text-red-400 font-semibold">Your Answer:</span> ${chosenText}</div>` : ''}
+                `;
+                container.appendChild(item);
+            });
+
+            sfx.finish();
+            if (percentage >= 80) launchConfetti();
+        }
+
+        /* ============================================================
+           STORAGE
+           ============================================================ */
+        function saveResult(result) {
+            try {
+                const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+                all.push(result);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+            } catch (e) { console.warn("Could not save result:", e); }
+        }
+
+        function loadResults() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+            catch (e) { return []; }
+        }
+
+        /* ============================================================
+           HISTORY SCREEN
+           ============================================================ */
+        function showHistory(returnTo) {
+            historyReturnTo = returnTo || "login";
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.remove('hidden');
+            renderHistory();
+        }
+
+        function backFromHistory() {
+            document.getElementById('historyScreen').classList.add('hidden');
+            if (historyReturnTo === "report") {
+                document.getElementById('reportScreen').classList.remove('hidden');
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+            }
+        }
+
+        function renderHistory() {
+            const all = loadResults().sort((a, b) => new Date(b.date) - new Date(a.date));
+            const summary = document.getElementById('historySummary');
+            const body = document.getElementById('historyBody');
+            const search = (document.getElementById('historySearch').value || "").toLowerCase();
+
+            if (all.length === 0) {
+                summary.innerHTML = '';
+                body.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fa-solid fa-folder-open text-5xl mb-3"></i>
+                        <p class="text-sm">No results yet. Finish a race to see it here.</p>
+                    </div>`;
+                return;
+            }
+
+            const avgScore = Math.round(all.reduce((s, r) => s + r.score, 0) / all.length);
+            const bestScore = Math.max(...all.map(r => r.score));
+            summary.innerHTML = `
+                <div class="bg-gray-800/80 border border-gray-700 rounded-xl p-4 text-center">
+                    <span class="text-xs text-gray-400 block">TOTAL ATTEMPTS</span>
+                    <span class="font-orbitron text-2xl font-bold text-blue-400">${all.length}</span>
+                </div>
+                <div class="bg-gray-800/80 border border-gray-700 rounded-xl p-4 text-center">
+                    <span class="text-xs text-gray-400 block">AVG SCORE</span>
+                    <span class="font-orbitron text-2xl font-bold text-amber-400">${avgScore}</span>
+                </div>
+                <div class="bg-gray-800/80 border border-gray-700 rounded-xl p-4 text-center">
+                    <span class="text-xs text-gray-400 block">BEST SCORE</span>
+                    <span class="font-orbitron text-2xl font-bold text-green-400">${bestScore}</span>
+                </div>`;
+
+            const filtered = search
+                ? all.filter(r => r.name.toLowerCase().includes(search))
+                : all;
+
+            if (filtered.length === 0) {
+                body.innerHTML = `<div class="text-center py-8 text-gray-500 text-sm">No student matches "${search}".</div>`;
+                return;
+            }
+
+            const rows = filtered.map((r, i) => {
+                const isYou = student.name && r.name.toLowerCase() === student.name.toLowerCase();
+                const accClass = r.accuracy >= 80 ? 'text-green-400' : r.accuracy >= 60 ? 'text-amber-400' : 'text-red-400';
+                const d = new Date(r.date);
+                const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " +
+                                d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                return `
+                    <tr class="border-b border-gray-800 hover:bg-gray-800/40 transition ${isYou ? 'bg-yellow-500/5' : ''}">
+                        <td class="py-2 px-3 text-gray-500 font-bold text-xs">#${i + 1}</td>
+                        <td class="py-2 px-3">
+                            <span class="font-bold text-gray-200">${escapeHtml(r.name)}</span>
+                            ${isYou ? '<span class="ml-2 text-[9px] bg-yellow-500 text-black font-orbitron font-bold px-1.5 py-0.5 rounded">YOU</span>' : ''}
+                        </td>
+                        <td class="py-2 px-3 text-gray-400 text-xs">${escapeHtml(r.class)}</td>
+                        <td class="py-2 px-3 font-orbitron font-bold text-yellow-400">${r.score}</td>
+                        <td class="py-2 px-3 text-green-400">${r.correct}/${r.total}</td>
+                        <td class="py-2 px-3 font-bold ${accClass}">${r.accuracy}%</td>
+                        <td class="py-2 px-3 text-gray-500 text-xs whitespace-nowrap">${dateStr}</td>
+                    </tr>`;
+            }).join('');
+
+            body.innerHTML = `
+                <div class="bg-gray-900/80 rounded-xl border border-gray-700 overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-800 border-b border-gray-700">
+                            <tr class="text-xs text-gray-400 uppercase">
+                                <th class="text-left py-3 px-3">Rank</th>
+                                <th class="text-left py-3 px-3">Student</th>
+                                <th class="text-left py-3 px-3">Class</th>
+                                <th class="text-left py-3 px-3">Score</th>
+                                <th class="text-left py-3 px-3">Correct</th>
+                                <th class="text-left py-3 px-3">Accuracy</th>
+                                <th class="text-left py-3 px-3">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-4 text-xs text-gray-500">
+                    Showing ${filtered.length} of ${all.length} attempts ·
+                    <button onclick="clearHistory()" class="text-red-500 hover:text-red-400 font-bold">Clear all records</button>
+                </div>`;
+        }
+
+        function clearHistory() {
+            if (confirm("Delete all saved results? This cannot be undone.")) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderHistory();
+            }
+        }
+
+        /* ============================================================
+           CSV EXPORT
+           ============================================================ */
+        function exportCSV() {
+            const all = loadResults();
+            if (all.length === 0) {
+                alert("No results to export yet.");
+                return;
+            }
+            const header = ["Name","Class","Score","Correct","Wrong","Timeout","Total","Accuracy","Date"];
+            const rows = all.map(r => [
+                `"${String(r.name).replace(/"/g, '""')}"`,
+                `"${String(r.class).replace(/"/g, '""')}"`,
+                r.score, r.correct, r.wrong, r.timeout, r.total,
+                r.accuracy + "%",
+                `"${new Date(r.date).toLocaleString()}"`
+            ].join(","));
+            const csv = [header.join(","), ...rows].join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "pancasila_race_report_" + new Date().toISOString().slice(0, 10) + ".csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        }
+
+        /* ============================================================
+           CONFETTI
+           ============================================================ */
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const colors = ["#fbbf24", "#ef4444", "#22c55e", "#3b82f6", "#ec4899", "#f97316"];
+            const parts = [];
+            for (let i = 0; i < 80; i++) {
+                parts.push({
+                    x: Math.random() * canvas.width,
+                    y: -20 - Math.random() * 200,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: Math.random() * 3 + 2,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * Math.PI,
+                    vrot: (Math.random() - 0.5) * 0.25
+                });
+            }
+            let frames = 0;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                parts.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.rot += p.vrot;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+                frames++;
+                if (frames < 200) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+
+        /* ============================================================
+           RESTART
+           ============================================================ */
+        function restartQuiz() {
+            document.getElementById('reportScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('userInfoHeader').classList.add('hidden');
+
+            document.getElementById('studentName').value = "";
+            document.getElementById('studentClass').value = "";
+            student = { name: "", class: "" };
+        }
+
+        /* ============================================================
+           KEYBOARD SHORTCUT
+           ============================================================ */
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const nextBtn = document.getElementById('nextBtn');
+                const quizVisible = !document.getElementById('quizScreen').classList.contains('hidden');
+                if (quizVisible && nextBtn && !nextBtn.disabled) {
+                    e.preventDefault();
+                    nextBtn.click();
+                }
+            }
+        });
+
+        /* ============================================================
+           INIT
+           ============================================================ */
+        window.addEventListener('resize', () => {
+            if (!document.getElementById('quizScreen').classList.contains('hidden')) {
+                updateCarPosition(false);
+            }
+        });
+    </script>
+</body>
+</html>
